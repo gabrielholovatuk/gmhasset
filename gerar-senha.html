@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gerar Hash de Senha — GMH</title>
+  <style>
+    body { font-family: sans-serif; background: #111827; color: #f1f5f9; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; margin: 0; }
+    .box { background: #1f2937; border: 1px solid #374151; border-radius: 12px; padding: 2rem; max-width: 500px; width: 100%; }
+    h1 { font-size: 1.1rem; margin-bottom: .25rem; }
+    p  { font-size: .82rem; color: #9ca3af; margin-bottom: 1.5rem; }
+    label { display: block; font-size: .8rem; color: #9ca3af; margin-bottom: .3rem; }
+    input { width: 100%; background: #374151; border: 1px solid #4b5563; border-radius: 7px; color: #f1f5f9; padding: .6rem .8rem; font-size: .9rem; margin-bottom: 1rem; outline: none; }
+    button { background: #3b82f6; border: none; border-radius: 8px; color: #fff; padding: .6rem 1.2rem; font-size: .88rem; font-weight: 600; cursor: pointer; width: 100%; }
+    .result { margin-top: 1.25rem; background: #0f172a; border: 1px solid #374151; border-radius: 8px; padding: 1rem; word-break: break-all; font-family: monospace; font-size: .82rem; }
+    .result span { color: #34d399; display: block; margin-bottom: .5rem; }
+    .copy-btn { margin-top: .75rem; background: #1f2937; border: 1px solid #374151; border-radius: 6px; color: #9ca3af; padding: .3rem .7rem; font-size: .78rem; cursor: pointer; }
+    .instructions { margin-top: 1.25rem; font-size: .78rem; color: #9ca3af; line-height: 1.6; }
+    .instructions code { background: #0f172a; padding: .1rem .35rem; border-radius: 4px; font-family: monospace; color: #60a5fa; }
+    #status { font-size: .78rem; color: #34d399; margin-top: .5rem; min-height: 1rem; }
+  </style>
+</head>
+<body>
+<div class="box">
+  <h1>Gerar Hash de Senha</h1>
+  <p>Use esta ferramenta para criar o hash SHA-256 da sua nova senha e colá-lo no <code>js/config.js</code>.</p>
+
+  <label for="pwd">Nova senha</label>
+  <input id="pwd" type="password" placeholder="Digite a nova senha" />
+
+  <label for="pwd2">Confirmar senha</label>
+  <input id="pwd2" type="password" placeholder="Repita a nova senha" />
+
+  <button id="btn-gerar">Gerar Hash</button>
+  <div id="status"></div>
+
+  <div class="result hidden" id="result-box">
+    <span>Hash SHA-256:</span>
+    <div id="hash-out"></div>
+    <button class="copy-btn" id="btn-copy">Copiar Hash</button>
+  </div>
+
+  <div class="instructions">
+    <strong>Como atualizar a senha:</strong>
+    <ol style="margin:.5rem 0 0 1.2rem">
+      <li>Cole o hash gerado no campo <code>hash</code> do usuário correspondente em <code>js/config.js</code>.</li>
+      <li>Salve o arquivo e faça o upload para o servidor.</li>
+      <li>Acesse o dashboard com a nova senha.</li>
+    </ol>
+  </div>
+</div>
+
+<script>
+  document.getElementById("btn-gerar").addEventListener("click", async () => {
+    const pwd  = document.getElementById("pwd").value;
+    const pwd2 = document.getElementById("pwd2").value;
+    const st   = document.getElementById("status");
+    const box  = document.getElementById("result-box");
+
+    if (!pwd) { st.style.color = "#f87171"; st.textContent = "Digite uma senha."; return; }
+    if (pwd !== pwd2) { st.style.color = "#f87171"; st.textContent = "As senhas não coincidem."; return; }
+
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pwd));
+    const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+
+    document.getElementById("hash-out").textContent = hash;
+    box.classList.remove("hidden");
+    st.style.color = "#34d399";
+    st.textContent = "Hash gerado com sucesso!";
+  });
+
+  document.getElementById("btn-copy").addEventListener("click", () => {
+    const hash = document.getElementById("hash-out").textContent;
+    navigator.clipboard.writeText(hash).then(() => {
+      document.getElementById("btn-copy").textContent = "Copiado!";
+      setTimeout(() => { document.getElementById("btn-copy").textContent = "Copiar Hash"; }, 2000);
+    });
+  });
+</script>
+</body>
+</html>
